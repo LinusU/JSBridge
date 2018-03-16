@@ -1,0 +1,14 @@
+name: JSBridge
+options:
+  bundleIdPrefix: org.linusu
+  deploymentTarget:
+    macOS: 10.10
+    iOS: 9.0
+targets:
+  JSBridge:
+    type: framework
+    platform: [iOS, macOS]
+    sources: Sources
+    scheme: {}
+    dependencies:
+      - carthage: PromiseKit
