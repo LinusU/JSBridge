@@ -78,7 +78,7 @@ open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     internal var currentIndex = 0
     internal var handlers = [Int: Resolver<String>]()
 
-    init (libraryCode: String) {
+    public init (libraryCode: String) {
         (ready, readyResolver) = createDeferred()
 
         super.init()
