@@ -28,7 +28,7 @@ fileprivate let internalLibrary = """
 }())
 """
 
-@available(macOS 10.13, *)
+@available(iOS 11.0, macOS 10.13, *)
 internal class JSBridgeSchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
@@ -58,14 +58,14 @@ fileprivate func createDeferred() -> (Guarantee<Void>, (()) -> Void) {
     return (promise, resolver!)
 }
 
-@available(macOS 10.13, *)
+@available(iOS 11.0, macOS 10.13, *)
 fileprivate func defaultWebViewConfig() -> WKWebViewConfiguration {
     let config = WKWebViewConfiguration()
     config.setURLSchemeHandler(JSBridgeSchemeHandler(), forURLScheme: "bridge")
     return config
 }
 
-@available(macOS 10.13, *)
+@available(iOS 11.0, macOS 10.13, *)
 open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     internal let encoder = JSONEncoder()
     internal let decoder = JSONDecoder()

@@ -19,7 +19,7 @@ extension XCTestCase {
     }
 }
 
-@available(macOS 10.13, *)
+@available(iOS 11.0, macOS 10.13, *)
 class BioPassTests: XCTestCase {
     func testCustomScheme() {
         let bridge = JSBridge(libraryCode: "window.readLocation = () => window.location.href")
