@@ -2,6 +2,10 @@ import Foundation
 import JavaScriptCore
 import WebKit
 
+#if os(iOS)
+import UIKit
+#endif
+
 import PromiseKit
 
 fileprivate let internalLibrary = """
@@ -86,6 +90,12 @@ open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         webView.navigationDelegate = self
         webView.configuration.userContentController.add(self, name: "scriptHandler")
         webView.load(URLRequest(url: URL(string: "bridge://localhost/")!))
+
+        #if os(iOS)
+            if let window = UIApplication.shared.windows.first {
+                window.addSubview(webView)
+            }
+        #endif
 
         ready.done { _ in
             self.webView.evaluateJavaScript(internalLibrary)
