@@ -11,6 +11,8 @@
 		BF_208681083247 /* JSBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_891872239885 /* JSBridge.swift */; };
 		BF_291410765830 = {isa = PBXBuildFile; fileRef = FR_536163640632 /* JSBridge.framework */; };
 		BF_294476745443 = {isa = PBXBuildFile; fileRef = FR_336209154452 /* JSBridge.framework */; };
+		BF_392077705339 /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_453103868115 /* Context.swift */; };
+		BF_640975342302 /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_453103868115 /* Context.swift */; };
 		BF_774877737560 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FR_345097450918 /* PromiseKit.framework */; };
 		BF_849879251136 /* JSBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_891872239885 /* JSBridge.swift */; };
 /* End PBXBuildFile section */
@@ -19,6 +21,7 @@
 		FR_129992608725 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FR_336209154452 /* JSBridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JSBridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FR_345097450918 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PromiseKit.framework; sourceTree = "<group>"; };
+		FR_453103868115 /* Context.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
 		FR_536163640632 /* JSBridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JSBridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FR_794320042762 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PromiseKit.framework; sourceTree = "<group>"; };
 		FR_891872239885 /* JSBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSBridge.swift; sourceTree = "<group>"; };
@@ -99,6 +102,7 @@
 		G_8934779235101 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				FR_453103868115 /* Context.swift */,
 				FR_129992608725 /* Info.plist */,
 				FR_891872239885 /* JSBridge.swift */,
 			);
@@ -167,6 +171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF_640975342302 /* Context.swift in Sources */,
 				BF_849879251136 /* JSBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -175,6 +180,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF_392077705339 /* Context.swift in Sources */,
 				BF_208681083247 /* JSBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

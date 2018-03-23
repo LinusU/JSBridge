@@ -1,5 +1,3 @@
-import Foundation
-import JavaScriptCore
 import WebKit
 
 #if os(iOS)
@@ -7,44 +5,6 @@ import UIKit
 #endif
 
 import PromiseKit
-
-fileprivate let internalLibrary = """
-(function () {
-    function serializeError (value) {
-        return (typeof value !== 'object' || value === null) ? {} : {
-            name: String(value.name),
-            message: String(value.message),
-            stack: String(value.stack),
-            line: Number(value.line),
-            column: Number(value.column)
-        }
-    }
-
-    window.__JSBridge__call__ = function (id, fnFactory, ...args) {
-        Promise.resolve().then(() => {
-            return fnFactory()(...args.map(wrap => wrap[0]))
-        }).then((result) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, type: 'resolve', result: JSON.stringify(result === undefined ? null : result) })
-        }, (err) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, type: 'reject', error: serializeError(err) })
-        })
-    }
-}())
-"""
-
-@available(iOS 11.0, macOS 10.13, *)
-internal class JSBridgeSchemeHandler: NSObject, WKURLSchemeHandler {
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
-        let response = URLResponse(url: urlSchemeTask.request.url!, mimeType: "text/html", expectedContentLength: html.count, textEncodingName: "utf-8")
-
-        urlSchemeTask.didReceive(response)
-        urlSchemeTask.didReceive(html)
-        urlSchemeTask.didFinish()
-    }
-
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
-}
 
 public struct JSError: Error {
     let name: String
@@ -55,88 +15,15 @@ public struct JSError: Error {
     let column: Int
 }
 
-fileprivate func createDeferred() -> (Guarantee<Void>, (()) -> Void) {
-    var resolver: ((()) -> Void)? = nil
-    let promise = Guarantee { seal in resolver = seal }
-
-    return (promise, resolver!)
-}
-
 @available(iOS 11.0, macOS 10.13, *)
-fileprivate func defaultWebViewConfig() -> WKWebViewConfiguration {
-    let config = WKWebViewConfiguration()
-    config.setURLSchemeHandler(JSBridgeSchemeHandler(), forURLScheme: "bridge")
-    return config
-}
+open class JSBridge {
+    public let encoder = JSONEncoder()
+    public let decoder = JSONDecoder()
 
-@available(iOS 11.0, macOS 10.13, *)
-open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
-    internal let encoder = JSONEncoder()
-    internal let decoder = JSONDecoder()
-    internal let queue = DispatchQueue(label: "org.linusu.JSBridge")
-    internal let webView = WKWebView.init(frame: .zero, configuration: defaultWebViewConfig())
+    internal let context: Promise<Context>
 
-    internal let ready: Guarantee<Void>
-    internal let readyResolver: (()) -> Void
-
-    internal var currentIndex = 0
-    internal var handlers = [Int: Resolver<String>]()
-
-    public init (libraryCode: String) {
-        (ready, readyResolver) = createDeferred()
-
-        super.init()
-
-        webView.navigationDelegate = self
-        webView.configuration.userContentController.add(self, name: "scriptHandler")
-        webView.load(URLRequest(url: URL(string: "bridge://localhost/")!))
-
-        #if os(iOS)
-            if let window = UIApplication.shared.windows.first {
-                window.addSubview(webView)
-            }
-        #endif
-
-        ready.done { _ in
-            self.webView.evaluateJavaScript(internalLibrary)
-            self.webView.evaluateJavaScript(libraryCode)
-        }
-    }
-
-    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        self.readyResolver(())
-    }
-
-    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let dict = message.body as? Dictionary<String, AnyObject> else { return }
-        guard let id = dict["id"] as? Int else { return }
-        guard let handler = handlers[id] else { return }
-
-        if let result = dict["result"] as? String {
-            return handler.fulfill(result)
-        }
-
-        if let error = dict["error"] as? Dictionary<String, AnyObject> {
-            return handler.reject(JSError(
-                name: (error["name"] as? String) ?? "Error",
-                message: (error["message"] as? String) ?? "Unknown error",
-                stack: (error["stack"] as? String) ?? "<unknown>",
-                line: (error["line"] as? Int) ?? 0,
-                column: (error["column"] as? Int) ?? 0
-            ))
-        }
-    }
-
-    internal func rawCall(function: String, args: String) -> Promise<String> {
-        return self.ready.then { _ in
-            Promise<String> { seal in
-                let id = self.currentIndex
-                self.currentIndex += 1
-                self.handlers[id] = seal
-
-                self.webView.evaluateJavaScript("window.__JSBridge__call__(\(id), () => \(function), ...[\(args)])")
-            }
-        }
+    public init(libraryCode: String) {
+        self.context = Context.asyncInit(libraryCode: libraryCode)
     }
 
     internal func decodeResult<Result: Decodable>(_ jsonString: String) -> Promise<Result> {
@@ -154,7 +41,9 @@ open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     internal func call(function: String, withStringifiedArgs args: String) -> Promise<Void> {
         return firstly {
-            self.rawCall(function: function, args: args)
+            self.context
+        }.then { context in
+            context.rawCall(function: function, args: args)
         }.then { _ in
             Promise.value(()) as Promise<Void>
         }
@@ -162,7 +51,9 @@ open class JSBridge: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     internal func call<Result: Decodable>(function: String, withStringifiedArgs args: String) -> Promise<Result> {
         return firstly {
-            self.rawCall(function: function, args: args)
+            self.context
+        }.then { context in
+            context.rawCall(function: function, args: args)
         }.then { stringified in
             self.decodeResult(stringified) as Promise<Result>
         }
