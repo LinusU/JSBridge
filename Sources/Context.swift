@@ -88,7 +88,9 @@ internal class Context: NSObject, WKScriptMessageHandler {
         webView.load(URLRequest(url: URL(string: "bridge://localhost/")!))
 
         #if os(iOS)
-            if let window = UIApplication.shared.windows.first {
+            if let root = globalRootViewController {
+                root.view.addSubview(webView)
+            } else if let window = UIApplication.shared.windows.first {
                 window.addSubview(webView)
             }
         #endif

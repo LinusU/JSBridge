@@ -105,6 +105,10 @@ Call a function with multiple arguments, ignoring the return value. The returned
 
 Call a function with multiple arguments. The returned promise will settle with the return value of the function.
 
+## iOS App Extension
+
+To be able to use JSBridge inside an App Extension, you need to call `JSBridge.setGlobalRootViewController(...)` and pass in the root `UIViewController` of your app extension before instantiating any `JSBridge` instances. This is because the WKWebView will get suspended if it isn't attach to the view hierarchy, and this function will pass in a reference for future instances to attach itself to.
+
 ## Hacking
 
 The Xcode project is generated automatically from `project.yml` using [XcodeGen](https://github.com/yonaskolb/XcodeGen). It's only checked in because Carthage needs it, do not edit it manually.

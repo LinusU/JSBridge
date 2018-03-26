@@ -15,12 +15,22 @@ public struct JSError: Error {
     let column: Int
 }
 
+#if os(iOS)
+internal var globalRootViewController: UIViewController?
+#endif
+
 @available(iOS 11.0, macOS 10.13, *)
 open class JSBridge {
     public let encoder = JSONEncoder()
     public let decoder = JSONDecoder()
 
     internal let context: Promise<Context>
+
+    #if os(iOS)
+    public static func setGlobalRootViewController(_ viewController: UIViewController) {
+        globalRootViewController = viewController
+    }
+    #endif
 
     public init(libraryCode: String) {
         self.context = Context.asyncInit(libraryCode: libraryCode)
