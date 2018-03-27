@@ -105,9 +105,25 @@ Call a function with multiple arguments, ignoring the return value. The returned
 
 Call a function with multiple arguments. The returned promise will settle with the return value of the function.
 
-## iOS App Extension
+## iOS
 
-To be able to use JSBridge inside an App Extension, you need to call `JSBridge.setGlobalRootViewController(...)` and pass in the root `UIViewController` of your app extension before instantiating any `JSBridge` instances. This is because the WKWebView will get suspended if it isn't attach to the view hierarchy, and this function will pass in a reference for future instances to attach itself to.
+To be able to use JSBridge on iOS, you need to give JSBridge a hook to your view hierarchy. Otherwise the `WKWebView` will get suspended by the OS, and your Promises will never settle.
+
+This is accomplished by using the `setGlobalUIHook` function before instantiating any `JSBridge` instances.
+
+**App:**
+
+```swift
+// Can be called from anywhere, e.g. your AppDelegate
+JSBridge.setGlobalUIHook(window: UIApplication.shared.windows.first)
+```
+
+**App Extension:**
+
+```swift
+// From within your root view controller
+JSBridge.setGlobalUIHook(viewController: self)
+```
 
 ## Hacking
 

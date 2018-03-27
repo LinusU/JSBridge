@@ -16,7 +16,14 @@ public struct JSError: Error {
 }
 
 #if os(iOS)
-internal var globalRootViewController: UIViewController?
+enum GlobalUIHook {
+    case none
+    case view(UIView)
+    case viewController(UIViewController)
+    case window(UIWindow)
+}
+
+internal var globalUIHook: GlobalUIHook = .none
 #endif
 
 @available(iOS 11.0, macOS 10.13, *)
@@ -27,8 +34,16 @@ open class JSBridge {
     internal let context: Promise<Context>
 
     #if os(iOS)
-    public static func setGlobalRootViewController(_ viewController: UIViewController) {
-        globalRootViewController = viewController
+    public static func setGlobalUIHook(view: UIView) {
+        globalUIHook = .view(view)
+    }
+
+    public static func setGlobalUIHook(viewController: UIViewController) {
+        globalUIHook = .viewController(viewController)
+    }
+
+    public static func setGlobalUIHook(window: UIWindow) {
+        globalUIHook = .window(window)
     }
     #endif
 
