@@ -18,13 +18,34 @@ fileprivate let internalLibrary = """
         }
     }
 
-    window.__JSBridge__call__ = function (id, fnFactory, ...args) {
+    let nextId = 0
+    let callbacks = {}
+
+    window.__JSBridge__resolve__ = function (id, value) {
+        callbacks[id].resolve(value)
+        delete callbacks[id]
+    }
+
+    window.__JSBridge__reject__ = function (id, error) {
+        callbacks[id].reject(error)
+        delete callbacks[id]
+    }
+
+    window.__JSBridge__receive__ = function (id, fnFactory, ...args) {
         Promise.resolve().then(() => {
             return fnFactory()(...args)
         }).then((result) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, type: 'resolve', result: JSON.stringify(result === undefined ? null : result) })
+            window.webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) })
         }, (err) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, type: 'reject', error: serializeError(err) })
+            window.webkit.messageHandlers.scriptHandler.postMessage({ id, error: serializeError(err) })
+        })
+    }
+
+    window.__JSBridge__send__ = function (method, ...args) {
+        return new Promise((resolve, reject) => {
+            const id = nextId++
+            callbacks[id] = { resolve, reject }
+            window.webkit.messageHandlers.scriptHandler.postMessage({ id, method, params: args.map(x => JSON.stringify(x)) })
         })
     }
 }())
@@ -75,10 +96,12 @@ fileprivate func defaultWebViewConfig() -> WKWebViewConfiguration {
 
 @available(iOS 11.0, macOS 10.13, *)
 internal class Context: NSObject, WKScriptMessageHandler {
-    internal let webView: WKWebView
+    private let webView: WKWebView
 
-    internal var currentIndex = 0
-    internal var handlers = [Int: Resolver<String>]()
+    private var currentIndex = 0
+    private var handlers = [Int: Resolver<String>]()
+
+    private var functions = [String: ([String]) throws -> Promise<String>]()
 
     public static func asyncInit(libraryCode: String) -> Promise<Context> {
         let webView = WKWebView.init(frame: .zero, configuration: defaultWebViewConfig())
@@ -124,13 +147,16 @@ internal class Context: NSObject, WKScriptMessageHandler {
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let dict = message.body as? Dictionary<String, AnyObject> else { return }
         guard let id = dict["id"] as? Int else { return }
-        guard let handler = handlers[id] else { return }
 
         if let result = dict["result"] as? String {
+            guard let handler = handlers[id] else { return }
+
             return handler.fulfill(result)
         }
 
         if let error = dict["error"] as? Dictionary<String, AnyObject> {
+            guard let handler = handlers[id] else { return }
+
             return handler.reject(JSError(
                 name: (error["name"] as? String) ?? "Error",
                 message: (error["message"] as? String) ?? "Unknown error",
@@ -138,6 +164,19 @@ internal class Context: NSObject, WKScriptMessageHandler {
                 line: (error["line"] as? Int) ?? 0,
                 column: (error["column"] as? Int) ?? 0
             ))
+        }
+
+        if let method = dict["method"] as? String {
+            guard let fn = functions[method] else { return }
+            let params = dict["params"] as? [String] ?? []
+
+            firstly {
+                try fn(params)
+            }.done {
+                self.webView.evaluateJavaScript("window.__JSBridge__resolve__(\(id), \($0))")
+            }.catch {
+                self.webView.evaluateJavaScript("window.__JSBridge__reject__(\(id), new Error('\($0.localizedDescription)'))")
+            }
         }
     }
 
@@ -147,7 +186,16 @@ internal class Context: NSObject, WKScriptMessageHandler {
             self.currentIndex += 1
             self.handlers[id] = seal
 
-            self.webView.evaluateJavaScript("window.__JSBridge__call__(\(id), () => \(function), ...[\(args)])")
+            self.webView.evaluateJavaScript("window.__JSBridge__receive__(\(id), () => \(function), ...[\(args)])")
         }
+    }
+
+    internal func register(namespace: String) {
+        self.webView.evaluateJavaScript("window.\(namespace) = {}")
+    }
+
+    internal func register(functionNamed name: String, _ fn: @escaping ([String]) throws -> Promise<String>) {
+        self.functions[name] = fn
+        self.webView.evaluateJavaScript("window.\(name) = (...args) => __JSBridge__send__('\(name)', ...args)")
     }
 }
