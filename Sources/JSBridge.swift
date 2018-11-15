@@ -55,17 +55,9 @@ open class JSBridge {
         return String(data: try! self.encoder.encode([value]).dropFirst().dropLast(), encoding: .utf8)!
     }
 
-    internal func decodeResult<Result: Decodable>(_ jsonString: String) -> Promise<Result> {
-        return Promise<Result> { seal in
-            do {
-                let data = ("[" + jsonString + "]").data(using: .utf8)!
-                let result = try self.decoder.decode([Result].self, from: data)
-
-                seal.fulfill(result[0])
-            } catch {
-                seal.reject(error)
-            }
-        }
+    private func decode<T: Decodable>(_ jsonString: String) throws -> T {
+        let data = ("[" + jsonString + "]").data(using: .utf8)!
+        return (try self.decoder.decode([T].self, from: data))[0]
     }
 
     internal func call(function: String, withStringifiedArgs args: String) -> Promise<Void> {
@@ -83,8 +75,8 @@ open class JSBridge {
             self.context
         }.then { context in
             context.rawCall(function: function, args: args)
-        }.then { stringified in
-            self.decodeResult(stringified) as Promise<Result>
+        }.map { stringified in
+            try self.decode(stringified)
         }
     }
 
