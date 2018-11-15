@@ -20,7 +20,7 @@ fileprivate let internalLibrary = """
 
     window.__JSBridge__call__ = function (id, fnFactory, ...args) {
         Promise.resolve().then(() => {
-            return fnFactory()(...args.map(wrap => wrap[0]))
+            return fnFactory()(...args)
         }).then((result) => {
             window.webkit.messageHandlers.scriptHandler.postMessage({ id, type: 'resolve', result: JSON.stringify(result === undefined ? null : result) })
         }, (err) => {

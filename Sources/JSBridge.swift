@@ -51,6 +51,10 @@ open class JSBridge {
         self.context = Context.asyncInit(libraryCode: libraryCode)
     }
 
+    private func encode<T: Encodable>(_ value: T) -> String {
+        return String(data: try! self.encoder.encode([value]).dropFirst().dropLast(), encoding: .utf8)!
+    }
+
     internal func decodeResult<Result: Decodable>(_ jsonString: String) -> Promise<Result> {
         return Promise<Result> { seal in
             do {
@@ -89,71 +93,35 @@ open class JSBridge {
     }
 
     public func call<A: Encodable>(function: String, withArg arg: A) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([arg]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(arg))")
     }
 
     public func call<A: Encodable, B: Encodable>(function: String, withArgs args: (A, B)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable>(function: String, withArgs args: (A, B, C)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable, D: Encodable>(function: String, withArgs args: (A, B, C, D)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable>(function: String, withArgs args: (A, B, C, D, E)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable>(function: String, withArgs args: (A, B, C, D, E, F)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable, G: Encodable>(function: String, withArgs args: (A, B, C, D, E, F, G)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        let g = try! String(data: self.encoder.encode([args.6]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f),\(g)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5)),\(self.encode(args.6))")
     }
 
     public func call<A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable, G: Encodable, H: Encodable>(function: String, withArgs args: (A, B, C, D, E, F, G, H)) -> Promise<Void> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        let g = try! String(data: self.encoder.encode([args.6]), encoding: .utf8)!
-        let h = try! String(data: self.encoder.encode([args.7]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f),\(g),\(h)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5)),\(self.encode(args.6)),\(self.encode(args.7))")
     }
 
     public func call<Result: Decodable>(function: String) -> Promise<Result> {
@@ -161,70 +129,34 @@ open class JSBridge {
     }
 
     public func call<Result: Decodable, A: Encodable>(function: String, withArg arg: A) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([arg]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(arg))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable>(function: String, withArgs args: (A, B)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable>(function: String, withArgs args: (A, B, C)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable, D: Encodable>(function: String, withArgs args: (A, B, C, D)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable>(function: String, withArgs args: (A, B, C, D, E)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable>(function: String, withArgs args: (A, B, C, D, E, F)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable, G: Encodable>(function: String, withArgs args: (A, B, C, D, E, F, G)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        let g = try! String(data: self.encoder.encode([args.6]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f),\(g)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5)),\(self.encode(args.6))")
     }
 
     public func call<Result: Decodable, A: Encodable, B: Encodable, C: Encodable, D: Encodable, E: Encodable, F: Encodable, G: Encodable, H: Encodable>(function: String, withArgs args: (A, B, C, D, E, F, G, H)) -> Promise<Result> {
-        let a = try! String(data: self.encoder.encode([args.0]), encoding: .utf8)!
-        let b = try! String(data: self.encoder.encode([args.1]), encoding: .utf8)!
-        let c = try! String(data: self.encoder.encode([args.2]), encoding: .utf8)!
-        let d = try! String(data: self.encoder.encode([args.3]), encoding: .utf8)!
-        let e = try! String(data: self.encoder.encode([args.4]), encoding: .utf8)!
-        let f = try! String(data: self.encoder.encode([args.5]), encoding: .utf8)!
-        let g = try! String(data: self.encoder.encode([args.6]), encoding: .utf8)!
-        let h = try! String(data: self.encoder.encode([args.7]), encoding: .utf8)!
-        return call(function: function, withStringifiedArgs: "\(a),\(b),\(c),\(d),\(e),\(f),\(g),\(h)")
+        return call(function: function, withStringifiedArgs: "\(self.encode(args.0)),\(self.encode(args.1)),\(self.encode(args.2)),\(self.encode(args.3)),\(self.encode(args.4)),\(self.encode(args.5)),\(self.encode(args.6)),\(self.encode(args.7))")
     }
 }
