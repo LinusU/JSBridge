@@ -103,12 +103,18 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     private var functions = [String: ([String]) throws -> Promise<String>]()
 
-    public static func asyncInit(libraryCode: String) -> Promise<Context> {
+    public static func asyncInit(libraryCode: String, customOrigin: URL? = nil) -> Promise<Context> {
         let webView = WKWebView.init(frame: .zero, configuration: defaultWebViewConfig())
         var delegate: ResolveWhenNavigatedDelegate? = ResolveWhenNavigatedDelegate()
 
         webView.navigationDelegate = delegate
-        webView.load(URLRequest(url: URL(string: "bridge://localhost/")!))
+
+        if let origin = customOrigin {
+            let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
+            webView.load(html, mimeType: "text/html", characterEncodingName: "utf8", baseURL: origin)
+        } else {
+            webView.load(URLRequest(url: URL(string: "bridge://localhost/")!))
+        }
 
         #if os(iOS)
         switch globalUIHook {

@@ -47,8 +47,8 @@ open class JSBridge {
     }
     #endif
 
-    public init(libraryCode: String) {
-        self.context = Context.asyncInit(libraryCode: libraryCode)
+    public init(libraryCode: String, customOrigin: URL? = nil) {
+        self.context = Context.asyncInit(libraryCode: libraryCode, customOrigin: customOrigin)
     }
 
     private func encode<T: Encodable>(_ value: T) -> String {

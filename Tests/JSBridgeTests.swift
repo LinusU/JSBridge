@@ -288,4 +288,19 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testCustomOrigin() {
+        let origin = URL(string: "https://example.com")!
+        let bridge = JSBridge(libraryCode: "window.getOrigin = () => window.location.origin", customOrigin: origin)
+
+        self.expectation(description: "getOrigin") {
+            firstly {
+                bridge.call(function: "getOrigin") as Promise<URL>
+            }.done { result in
+                XCTAssertEqual(result, origin)
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }
