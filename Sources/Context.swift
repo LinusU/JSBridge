@@ -89,7 +89,7 @@ fileprivate class BridgeSchemeHandler: NSObject, WKURLSchemeHandler {
 }
 
 @available(iOS 11.0, macOS 10.13, *)
-fileprivate func buildWebViewConfig(libraryCode: String) -> WKWebViewConfiguration {
+fileprivate func buildWebViewConfig(libraryCode: String, incognito: Bool) -> WKWebViewConfiguration {
     let source = "\(internalLibrary);try{(function () {\(libraryCode)}());__JSBridge__ready__(true)} catch (err) {__JSBridge__ready__(false, err)}"
     let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
     let controller = WKUserContentController()
@@ -99,6 +99,10 @@ fileprivate func buildWebViewConfig(libraryCode: String) -> WKWebViewConfigurati
     configuration.userContentController = controller
 
     configuration.setURLSchemeHandler(BridgeSchemeHandler(), forURLScheme: "bridge")
+
+    if incognito {
+        configuration.websiteDataStore = .nonPersistent()
+    }
 
     return configuration
 }
@@ -114,10 +118,10 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     internal let webView: WKWebView
 
-    init(libraryCode: String, customOrigin: URL? = nil) {
+    init(libraryCode: String, customOrigin: URL?, incognito: Bool) {
         let (readyPromise, readyResolver) = Promise<String>.pending()
 
-        self.webView = WKWebView.init(frame: .zero, configuration: buildWebViewConfig(libraryCode: libraryCode))
+        self.webView = WKWebView.init(frame: .zero, configuration: buildWebViewConfig(libraryCode: libraryCode, incognito: incognito))
         self.ready = readyPromise.map { _ in () }
         self.handlers[0] = readyResolver
 

@@ -50,8 +50,8 @@ open class JSBridge {
     }
     #endif
 
-    public init(libraryCode: String, customOrigin: URL? = nil, headless: Bool = true) {
-        self.context = Context(libraryCode: libraryCode, customOrigin: customOrigin)
+    public init(libraryCode: String, customOrigin: URL? = nil, headless: Bool = true, incognito: Bool = false) {
+        self.context = Context(libraryCode: libraryCode, customOrigin: customOrigin, incognito: incognito)
         self.headless = headless
         self.webView = headless ? nil : self.context.webView
 
