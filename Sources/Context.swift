@@ -65,22 +65,8 @@ fileprivate class SchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
 }
 
-fileprivate func createDeferred() -> (Promise<Void>, Resolver<Void>) {
-    var resolver: Resolver<Void>? = nil
-    let promise = Promise { seal in resolver = seal }
-
-    return (promise, resolver!)
-}
-
 fileprivate class ResolveWhenNavigatedDelegate: NSObject, WKNavigationDelegate {
-    fileprivate let ready: Promise<Void>
-    private let readyResolver: Resolver<Void>
-
-    override init() {
-        (ready, readyResolver) = createDeferred()
-
-        super.init()
-    }
+    fileprivate let (ready, readyResolver) = Promise<Void>.pending()
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         self.readyResolver.fulfill(())
