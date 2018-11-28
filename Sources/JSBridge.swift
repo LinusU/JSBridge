@@ -31,6 +31,9 @@ open class JSBridge {
     public let encoder = JSONEncoder()
     public let decoder = JSONDecoder()
 
+    public let headless: Bool
+    public let webView: WKWebView?
+
     internal let context: Context
 
     #if os(iOS)
@@ -47,8 +50,21 @@ open class JSBridge {
     }
     #endif
 
-    public init(libraryCode: String, customOrigin: URL? = nil) {
+    public init(libraryCode: String, customOrigin: URL? = nil, headless: Bool = true) {
         self.context = Context(libraryCode: libraryCode, customOrigin: customOrigin)
+        self.headless = headless
+        self.webView = headless ? nil : self.context.webView
+
+        #if os(iOS)
+        if headless {
+            switch globalUIHook {
+                case .none: break
+                case .view(let view): view.addSubview(self.context.webView)
+                case .viewController(let viewController): viewController.view.addSubview(self.context.webView)
+                case .window(let window): window.addSubview(self.context.webView)
+            }
+        }
+        #endif
     }
 
     private func encode<T: Encodable>(_ value: T) -> String {

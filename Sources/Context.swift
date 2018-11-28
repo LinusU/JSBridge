@@ -105,13 +105,14 @@ fileprivate func buildWebViewConfig(libraryCode: String) -> WKWebViewConfigurati
 
 @available(iOS 11.0, macOS 10.13, *)
 internal class Context: NSObject, WKScriptMessageHandler {
-    private let webView: WKWebView
     private let ready: Promise<Void>
 
     private var nextIdentifier = 1
     private var handlers = [Int: Resolver<String>]()
 
     private var functions = [String: ([String]) throws -> Promise<String>]()
+
+    internal let webView: WKWebView
 
     init(libraryCode: String, customOrigin: URL? = nil) {
         let (readyPromise, readyResolver) = Promise<String>.pending()
@@ -124,15 +125,6 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
         webView.configuration.userContentController.add(self, name: "scriptHandler")
         webView.load(html, mimeType: "text/html", characterEncodingName: "utf8", baseURL: customOrigin ?? defaultOrigin)
-
-        #if os(iOS)
-        switch globalUIHook {
-            case .none: break
-            case .view(let view): view.addSubview(webView)
-            case .viewController(let viewController): viewController.view.addSubview(webView)
-            case .window(let window): window.addSubview(webView)
-        }
-        #endif
     }
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
