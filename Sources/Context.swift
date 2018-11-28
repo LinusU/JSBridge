@@ -38,9 +38,9 @@ fileprivate let internalLibrary = """
         Promise.resolve().then(() => {
             return fnFactory()(...args)
         }).then((result) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) })
+            webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) })
         }, (err) => {
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, error: serializeError(err) })
+            webkit.messageHandlers.scriptHandler.postMessage({ id, error: serializeError(err) })
         })
     }
 
@@ -48,7 +48,7 @@ fileprivate let internalLibrary = """
         return new Promise((resolve, reject) => {
             const id = nextId++
             callbacks[id] = { resolve, reject }
-            window.webkit.messageHandlers.scriptHandler.postMessage({ id, method, params: args.map(x => JSON.stringify(x)) })
+            webkit.messageHandlers.scriptHandler.postMessage({ id, method, params: args.map(x => JSON.stringify(x)) })
         })
     }
 }())
@@ -179,9 +179,9 @@ internal class Context: NSObject, WKScriptMessageHandler {
             firstly {
                 try fn(params)
             }.done {
-                self.webView.evaluateJavaScript("window.__JSBridge__resolve__(\(id), \($0))")
+                self.webView.evaluateJavaScript("__JSBridge__resolve__(\(id), \($0))")
             }.catch {
-                self.webView.evaluateJavaScript("window.__JSBridge__reject__(\(id), new Error('\($0.localizedDescription)'))")
+                self.webView.evaluateJavaScript("__JSBridge__reject__(\(id), new Error('\($0.localizedDescription)'))")
             }
         }
     }
@@ -192,7 +192,7 @@ internal class Context: NSObject, WKScriptMessageHandler {
             self.currentIndex += 1
             self.handlers[id] = seal
 
-            self.webView.evaluateJavaScript("window.__JSBridge__receive__(\(id), () => \(function), ...[\(args)])")
+            self.webView.evaluateJavaScript("__JSBridge__receive__(\(id), () => \(function), ...[\(args)])")
         }
     }
 

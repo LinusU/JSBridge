@@ -26,7 +26,7 @@ class TestError: NSObject, LocalizedError {
 @available(iOS 11.0, macOS 10.13, *)
 class BioPassTests: XCTestCase {
     func testCustomScheme() {
-        let bridge = JSBridge(libraryCode: "window.readLocation = () => window.location.href")
+        let bridge = JSBridge(libraryCode: "window.readLocation = () => location.href")
 
         self.expectation(description: "readLocation") {
             firstly {
@@ -124,7 +124,7 @@ class BioPassTests: XCTestCase {
     }
 
     func testLocalStorage() {
-        let bridge = JSBridge(libraryCode: "window.write = (key, val) => window.localStorage.setItem(key, val)\nwindow.read = (key) => window.localStorage.getItem(key)")
+        let bridge = JSBridge(libraryCode: "window.write = (key, val) => localStorage.setItem(key, val)\nwindow.read = (key) => localStorage.getItem(key)")
 
         self.expectation(description: "write & read") {
             firstly {
@@ -291,7 +291,7 @@ class BioPassTests: XCTestCase {
 
     func testCustomOrigin() {
         let origin = URL(string: "https://example.com")!
-        let bridge = JSBridge(libraryCode: "window.getOrigin = () => window.location.origin", customOrigin: origin)
+        let bridge = JSBridge(libraryCode: "window.getOrigin = () => location.origin", customOrigin: origin)
 
         self.expectation(description: "getOrigin") {
             firstly {
