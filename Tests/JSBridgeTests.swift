@@ -303,4 +303,33 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testRelativeFetch() {
+        struct FetchResponse: Decodable {
+            let status: Int
+            let body: String
+        }
+
+        let bridge = JSBridge(libraryCode: "window.test = a => fetch(a).then(async r => ({ status: r.status, body: await r.text() }))")
+
+        self.expectation(description: "fetchRoot") {
+            firstly {
+                bridge.call(function: "test", withArg: "/") as Promise<FetchResponse>
+            }.done { result in
+                XCTAssertEqual(result.status, 200)
+                XCTAssertEqual(result.body, "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>")
+            }
+        }
+
+        self.expectation(description: "fetchTest") {
+            firstly {
+                bridge.call(function: "test", withArg: "/test") as Promise<FetchResponse>
+            }.done { result in
+                XCTAssertEqual(result.status, 404)
+                XCTAssertEqual(result.body, "404 Not Found")
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }

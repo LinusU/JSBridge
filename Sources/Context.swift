@@ -6,6 +6,9 @@ import UIKit
 
 import PromiseKit
 
+fileprivate let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
+fileprivate let notFound = "404 Not Found".data(using: .utf8)!
+
 fileprivate let internalLibrary = """
 (function () {
     function serializeError (value) {
@@ -52,13 +55,24 @@ fileprivate let internalLibrary = """
 """
 
 @available(iOS 11.0, macOS 10.13, *)
-fileprivate class SchemeHandler: NSObject, WKURLSchemeHandler {
+fileprivate class BridgeSchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
-        let response = URLResponse(url: urlSchemeTask.request.url!, mimeType: "text/html", expectedContentLength: html.count, textEncodingName: "utf-8")
+        let url = urlSchemeTask.request.url!
 
-        urlSchemeTask.didReceive(response)
-        urlSchemeTask.didReceive(html)
+        if url.path == "/" {
+            urlSchemeTask.didReceive(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [
+                "Content-Type": "text/html; charset=utf-8",
+                "Content-Length": String(html.count),
+            ])!)
+            urlSchemeTask.didReceive(html)
+        } else {
+            urlSchemeTask.didReceive(HTTPURLResponse(url: url, statusCode: 404, httpVersion: nil, headerFields: [
+                "Content-Type": "text/plain; charset=utf-8",
+                "Content-Length": String(notFound.count),
+            ])!)
+            urlSchemeTask.didReceive(notFound)
+        }
+
         urlSchemeTask.didFinish()
     }
 
@@ -76,7 +90,7 @@ fileprivate class ResolveWhenNavigatedDelegate: NSObject, WKNavigationDelegate {
 @available(iOS 11.0, macOS 10.13, *)
 fileprivate func defaultWebViewConfig() -> WKWebViewConfiguration {
     let config = WKWebViewConfiguration()
-    config.setURLSchemeHandler(SchemeHandler(), forURLScheme: "bridge")
+    config.setURLSchemeHandler(BridgeSchemeHandler(), forURLScheme: "bridge")
     return config
 }
 
