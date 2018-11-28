@@ -89,7 +89,7 @@ class BioPassTests: XCTestCase {
     }
 
     func testThrowError() {
-        let bridge = JSBridge(libraryCode: "window.explode = () => { throw new Error('123xyz') }")
+        let bridge = JSBridge(libraryCode: "window.explode = () => { throw new Error('mJet3Bn35') }")
 
         self.expectation(description: "explode") {
             firstly {
@@ -100,7 +100,7 @@ class BioPassTests: XCTestCase {
                 guard let e = err as? JSError else { throw err }
 
                 XCTAssertEqual(e.name, "Error")
-                XCTAssertEqual(e.message, "123xyz")
+                XCTAssertEqual(e.message, "mJet3Bn35")
 
                 return Promise.value(())
             }
@@ -327,6 +327,27 @@ class BioPassTests: XCTestCase {
             }.done { result in
                 XCTAssertEqual(result.status, 404)
                 XCTAssertEqual(result.body, "404 Not Found")
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testInitError() {
+        let bridge = JSBridge(libraryCode: "throw new Error('g0krG9Jjj')")
+
+        self.expectation(description: "focus") {
+            firstly {
+                bridge.call(function: "focus") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "g0krG9Jjj")
+
+                return Promise.value(())
             }
         }
 

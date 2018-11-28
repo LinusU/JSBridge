@@ -31,7 +31,7 @@ open class JSBridge {
     public let encoder = JSONEncoder()
     public let decoder = JSONDecoder()
 
-    internal let context: Promise<Context>
+    internal let context: Context
 
     #if os(iOS)
     public static func setGlobalUIHook(view: UIView) {
@@ -48,7 +48,7 @@ open class JSBridge {
     #endif
 
     public init(libraryCode: String, customOrigin: URL? = nil) {
-        self.context = Context.asyncInit(libraryCode: libraryCode, customOrigin: customOrigin)
+        self.context = Context(libraryCode: libraryCode, customOrigin: customOrigin)
     }
 
     private func encode<T: Encodable>(_ value: T) -> String {
@@ -62,8 +62,6 @@ open class JSBridge {
 
     internal func call(function: String, withStringifiedArgs args: String) -> Promise<Void> {
         return firstly {
-            self.context
-        }.then { context in
             context.rawCall(function: function, args: args)
         }.then { _ in
             Promise.value(()) as Promise<Void>
@@ -72,8 +70,6 @@ open class JSBridge {
 
     internal func call<Result: Decodable>(function: String, withStringifiedArgs args: String) -> Promise<Result> {
         return firstly {
-            self.context
-        }.then { context in
             context.rawCall(function: function, args: args)
         }.map { stringified in
             try self.decode(stringified)
@@ -153,11 +149,11 @@ open class JSBridge {
     }
 
     private func rawRegister(namespace: String) {
-        let _ = self.context.done { $0.register(namespace: namespace) }
+        self.context.register(namespace: namespace)
     }
 
     private func rawRegister(functionNamed name: String, _ fn: @escaping ([String]) throws -> Promise<String>) {
-        let _ = self.context.done { $0.register(functionNamed: name, fn) }
+        self.context.register(functionNamed: name, fn)
     }
 
     public func register(namespace: String) {
