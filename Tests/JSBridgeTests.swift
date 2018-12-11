@@ -3,7 +3,7 @@ import XCTest
 import Foundation
 import PromiseKit
 
-@testable import JSBridge
+import JSBridge
 
 extension XCTestCase {
     func expectation(description: String, _ promiseFactory: () -> Promise<Void>) {
@@ -19,10 +19,14 @@ extension XCTestCase {
     }
 }
 
+class TestError: NSObject, LocalizedError {
+    var errorDescription: String? { return "DF17904B" }
+}
+
 @available(iOS 11.0, macOS 10.13, *)
 class BioPassTests: XCTestCase {
     func testCustomScheme() {
-        let bridge = JSBridge(libraryCode: "window.readLocation = () => window.location.href")
+        let bridge = JSBridge(libraryCode: "window.readLocation = () => location.href")
 
         self.expectation(description: "readLocation") {
             firstly {
@@ -85,7 +89,7 @@ class BioPassTests: XCTestCase {
     }
 
     func testThrowError() {
-        let bridge = JSBridge(libraryCode: "window.explode = () => { throw new Error('123xyz') }")
+        let bridge = JSBridge(libraryCode: "window.explode = () => { throw new Error('mJet3Bn35') }")
 
         self.expectation(description: "explode") {
             firstly {
@@ -96,7 +100,7 @@ class BioPassTests: XCTestCase {
                 guard let e = err as? JSError else { throw err }
 
                 XCTAssertEqual(e.name, "Error")
-                XCTAssertEqual(e.message, "123xyz")
+                XCTAssertEqual(e.message, "mJet3Bn35")
 
                 return Promise.value(())
             }
@@ -120,7 +124,7 @@ class BioPassTests: XCTestCase {
     }
 
     func testLocalStorage() {
-        let bridge = JSBridge(libraryCode: "window.write = (key, val) => window.localStorage.setItem(key, val)\nwindow.read = (key) => window.localStorage.getItem(key)")
+        let bridge = JSBridge(libraryCode: "window.write = (key, val) => localStorage.setItem(key, val)\nwindow.read = (key) => localStorage.getItem(key)")
 
         self.expectation(description: "write & read") {
             firstly {
@@ -219,6 +223,153 @@ class BioPassTests: XCTestCase {
                 Foobar.fetch(url: URL(string: "https://server.test-cors.org/server?enable=true")!)
             }.done { result in
                 XCTAssertEqual(result.status, 200)
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testCallingIntoSwift() {
+        let bridge = JSBridge(libraryCode: "")
+
+        bridge.register(namespace: "Swift")
+        bridge.register(functionNamed: "Swift.four") { 4 }
+        bridge.register(functionNamed: "Swift.addOne") { (i: Int) in i + 1 }
+        bridge.register(functionNamed: "Swift.addTwo") { (i: Int) in Promise.value(i + 2) }
+        bridge.register(functionNamed: "Swift.reject") { return Promise<Void>(error: TestError()) }
+        bridge.register(functionNamed: "Swift.addAllArgs") { (a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int, h: Int) in a + b + c + d + e + f + g + h }
+
+        self.expectation(description: "four") {
+            firstly {
+                bridge.call(function: "Swift.four") as Promise<Int>
+            }.done { result in
+                XCTAssertEqual(result, 4)
+            }
+        }
+
+        self.expectation(description: "addOne") {
+            firstly {
+                bridge.call(function: "Swift.addOne", withArg: 5) as Promise<Int>
+            }.done { result in
+                XCTAssertEqual(result, 6)
+            }
+        }
+
+        self.expectation(description: "addTwo") {
+            firstly {
+                bridge.call(function: "Swift.addTwo", withArg: 7) as Promise<Int>
+            }.done { result in
+                XCTAssertEqual(result, 9)
+            }
+        }
+
+        self.expectation(description: "reject") {
+            firstly {
+                bridge.call(function: "Swift.reject") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "DF17904B")
+
+                return Promise.value(())
+            }
+        }
+
+        self.expectation(description: "addAllArgs") {
+            firstly {
+                bridge.call(function: "Swift.addAllArgs", withArgs: (1, 2, 3, 4, 5, 6, 7, 8)) as Promise<Int>
+            }.done { result in
+                XCTAssertEqual(result, 36)
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testCustomOrigin() {
+        let origin = URL(string: "https://example.com")!
+        let bridge = JSBridge(libraryCode: "window.getOrigin = () => location.origin", customOrigin: origin)
+
+        self.expectation(description: "getOrigin") {
+            firstly {
+                bridge.call(function: "getOrigin") as Promise<URL>
+            }.done { result in
+                XCTAssertEqual(result, origin)
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testRelativeFetch() {
+        struct FetchResponse: Decodable {
+            let status: Int
+            let body: String
+        }
+
+        let bridge = JSBridge(libraryCode: "window.test = a => fetch(a).then(async r => ({ status: r.status, body: await r.text() }))")
+
+        self.expectation(description: "fetchRoot") {
+            firstly {
+                bridge.call(function: "test", withArg: "/") as Promise<FetchResponse>
+            }.done { result in
+                XCTAssertEqual(result.status, 200)
+                XCTAssertEqual(result.body, "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>")
+            }
+        }
+
+        self.expectation(description: "fetchTest") {
+            firstly {
+                bridge.call(function: "test", withArg: "/test") as Promise<FetchResponse>
+            }.done { result in
+                XCTAssertEqual(result.status, 404)
+                XCTAssertEqual(result.body, "404 Not Found")
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testInitError() {
+        let bridge = JSBridge(libraryCode: "throw new Error('g0krG9Jjj')")
+
+        self.expectation(description: "focus") {
+            firstly {
+                bridge.call(function: "focus") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "g0krG9Jjj")
+
+                return Promise.value(())
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testErrorCodes() {
+        let bridge = JSBridge(libraryCode: "window.crash = () => { throw Object.assign(new Error('Test'), { code: 'E_TEST' }) }")
+
+        self.expectation(description: "crash") {
+            firstly {
+                bridge.call(function: "crash") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "Test")
+                XCTAssertEqual(e.code, "E_TEST")
+
+                return Promise.value(())
             }
         }
 
