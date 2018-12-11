@@ -13,6 +13,8 @@ public struct JSError: Error {
 
     public let line: Int
     public let column: Int
+
+    public let code: String?
 }
 
 #if os(iOS)

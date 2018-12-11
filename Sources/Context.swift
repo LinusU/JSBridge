@@ -18,7 +18,8 @@ fileprivate let internalLibrary = """
             message: String(value.message),
             stack: String(value.stack),
             line: Number(value.line),
-            column: Number(value.column)
+            column: Number(value.column),
+            code: value.code ? String(value.code) : null
         }
     }
 
@@ -149,7 +150,8 @@ internal class Context: NSObject, WKScriptMessageHandler {
                 message: (error["message"] as? String) ?? "Unknown error",
                 stack: (error["stack"] as? String) ?? "<unknown>",
                 line: (error["line"] as? Int) ?? 0,
-                column: (error["column"] as? Int) ?? 0
+                column: (error["column"] as? Int) ?? 0,
+                code: (error["code"] as? String)
             ))
         }
 
