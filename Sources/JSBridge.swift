@@ -7,12 +7,12 @@ import UIKit
 import PromiseKit
 
 public struct JSError: Error {
-    let name: String
-    let message: String
-    let stack: String
+    public let name: String
+    public let message: String
+    public let stack: String
 
-    let line: Int
-    let column: Int
+    public let line: Int
+    public let column: Int
 }
 
 #if os(iOS)

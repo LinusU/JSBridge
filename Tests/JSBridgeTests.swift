@@ -3,7 +3,7 @@ import XCTest
 import Foundation
 import PromiseKit
 
-@testable import JSBridge
+import JSBridge
 
 extension XCTestCase {
     func expectation(description: String, _ promiseFactory: () -> Promise<Void>) {
