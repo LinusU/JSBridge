@@ -375,4 +375,28 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testErrorPropagation() {
+        let bridge = JSBridge(libraryCode: "window.crash = () => { throw Object.assign(new Error('Test'), { code: 'E_TEST' }) }; window.jsTest = () => window.swiftTest()")
+
+        bridge.register(functionNamed: "swiftTest") { () -> Promise<Void> in bridge.call(function: "crash") }
+
+        self.expectation(description: "errorPropagation") {
+            firstly {
+                bridge.call(function: "jsTest") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "Test")
+                XCTAssertEqual(e.code, "E_TEST")
+
+                return Promise.value(())
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }

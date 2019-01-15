@@ -117,6 +117,8 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     private var functions = [String: ([String]) throws -> Promise<String>]()
 
+    private static var errorEncoder = JSONEncoder()
+
     internal let webView: WKWebView
 
     init(libraryCode: String, customOrigin: URL?, incognito: Bool) {
@@ -164,7 +166,11 @@ internal class Context: NSObject, WKScriptMessageHandler {
             }.done {
                 self.webView.evaluateJavaScript("__JSBridge__resolve__(\(id), \($0))")
             }.catch {
-                self.webView.evaluateJavaScript("__JSBridge__reject__(\(id), new Error('\($0.localizedDescription)'))")
+                if let error = $0 as? JSError, let encoded = try? Context.errorEncoder.encode(error), let props = String(data: encoded, encoding: .utf8) {
+                    self.webView.evaluateJavaScript("__JSBridge__reject__(\(id), Object.assign(new Error(''), \(props)))")
+                } else {
+                    self.webView.evaluateJavaScript("__JSBridge__reject__(\(id), new Error('\($0.localizedDescription)'))")
+                }
             }
         }
     }
