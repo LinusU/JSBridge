@@ -399,4 +399,74 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testAnonymousFunctions() {
+        let bridge = JSBridge(libraryCode: "")
+
+        self.expectation(description: "anonymousFunctions 0") {
+            firstly {
+                bridge.call(function: "function test () { return 'test0' }") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test0")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 1") {
+            firstly {
+                bridge.call(function: "function () { return 'test1' }") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test1")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 2") {
+            firstly {
+                bridge.call(function: "(function test () { return 'test2' })") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test2")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 3") {
+            firstly {
+                bridge.call(function: "(function () { return 'test3' })") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test3")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 4") {
+            firstly {
+                bridge.call(function: "() => 'test4'") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test4")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 5") {
+            firstly {
+                bridge.call(function: "() => { return 'test5' }") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test5")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 6") {
+            firstly {
+                bridge.call(function: "_ => 'test6'") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test6")
+            }
+        }
+
+        self.expectation(description: "anonymousFunctions 7") {
+            firstly {
+                bridge.call(function: "_ => { return 'test7' }") as Promise<String>
+            }.done {
+                XCTAssertEqual($0, "test7")
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }
