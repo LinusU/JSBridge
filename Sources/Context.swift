@@ -69,9 +69,9 @@ fileprivate let internalLibrary = """
 
     window.__JSBridge__ready__ = function (success, err) {
         if (success) {
-            webkit.messageHandlers.scriptHandler.postMessage({ id: 0, result: 'null' })
+            webkit.messageHandlers.scriptHandler.postMessage({ didLoad: true })
         } else {
-            webkit.messageHandlers.scriptHandler.postMessage({ id: 0, error: serializeError(err) })
+            webkit.messageHandlers.scriptHandler.postMessage({ didLoad: true, error: serializeError(err) })
         }
     }
 }())
@@ -123,7 +123,7 @@ fileprivate func buildWebViewConfig(libraryCode: String, incognito: Bool) -> WKW
 
 @available(iOS 11.0, macOS 10.13, *)
 internal class Context: NSObject, WKScriptMessageHandler {
-    private let ready: Promise<Void>
+    private var (ready, readyResolver) = Promise<Void>.pending()
 
     private var nextIdentifier = 1
     private var handlers = [Int: Resolver<String>]()
@@ -135,11 +135,7 @@ internal class Context: NSObject, WKScriptMessageHandler {
     internal let webView: WKWebView
 
     init(libraryCode: String, customOrigin: URL?, incognito: Bool) {
-        let (readyPromise, readyResolver) = Promise<String>.pending()
-
-        self.webView = WKWebView.init(frame: .zero, configuration: buildWebViewConfig(libraryCode: libraryCode, incognito: incognito))
-        self.ready = readyPromise.map { _ in () }
-        self.handlers[0] = readyResolver
+        webView = WKWebView.init(frame: .zero, configuration: buildWebViewConfig(libraryCode: libraryCode, incognito: incognito))
 
         super.init()
 
@@ -149,6 +145,15 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let dict = message.body as? Dictionary<String, AnyObject> else { return }
+
+        if let didLoad = dict["didLoad"] as? Bool, didLoad {
+            if let error = dict["error"] as? Dictionary<String, AnyObject> {
+                readyResolver.reject(JSError(fromDictionary: error))
+            } else {
+                readyResolver.fulfill(())
+            }
+        }
+
         guard let id = dict["id"] as? Int else { return }
 
         if let result = dict["result"] as? String {
