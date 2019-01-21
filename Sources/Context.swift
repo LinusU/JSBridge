@@ -39,6 +39,10 @@ fileprivate let internalLibrary = """
     let nextId = 1
     let callbacks = {}
 
+    window.addEventListener('pagehide', () => {
+        webkit.messageHandlers.scriptHandler.postMessage({ didUnload: true })
+    })
+
     window.__JSBridge__resolve__ = function (id, value) {
         callbacks[id].resolve(value)
         delete callbacks[id]
@@ -152,6 +156,12 @@ internal class Context: NSObject, WKScriptMessageHandler {
             } else {
                 readyResolver.fulfill(())
             }
+        }
+
+        if let didUnload = dict["didUnload"] as? Bool, didUnload {
+            handlers.forEach { $1.reject(AbortedError()) }
+            handlers.removeAll()
+            (ready, readyResolver) = Promise<Void>.pending()
         }
 
         guard let id = dict["id"] as? Int else { return }

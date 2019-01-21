@@ -6,6 +6,8 @@ import UIKit
 
 import PromiseKit
 
+public struct AbortedError: Error {}
+
 public struct JSError: Error, Codable {
     public let name: String
     public let message: String

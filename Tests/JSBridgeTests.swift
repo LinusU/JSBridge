@@ -469,4 +469,77 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testAbortedError() {
+        let bridge = JSBridge(libraryCode: """
+            window.interruptedLongRunningTask = () => {
+                setTimeout(() => (window.location.href = '/'), 120)
+                return new Promise(resolve => setTimeout(resolve, 300))
+            }
+        """)
+
+        self.expectation(description: "interruptedLongRunningTask") {
+            firstly {
+                bridge.call(function: "interruptedLongRunningTask") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard err is AbortedError else { throw err }
+                return Promise.value(())
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testIFrameNotAborting() {
+        let bridge = JSBridge(libraryCode: """
+            window.longRunningTask = () => {
+                let iframe
+
+                setTimeout(() => {
+                    iframe = document.createElement('iframe')
+                    iframe.src = '/1'
+                    document.body.appendChild(iframe)
+                }, 100)
+
+                setTimeout(() => {
+                    iframe.src = '/2'
+                }, 200)
+
+                return new Promise(resolve => setTimeout(resolve, 300))
+            }
+        """)
+
+        self.expectation(description: "longRunningTask") {
+            bridge.call(function: "longRunningTask")
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
+
+    func testThrowNull() {
+        let bridge = JSBridge(libraryCode: "window.throwNull = () => { throw null }")
+
+        self.expectation(description: "throwNull") {
+            firstly {
+                bridge.call(function: "throwNull") as Promise<Void>
+            }.done { _ in
+                XCTFail("Missed expected error")
+            }.recover { (err) throws -> Promise<Void> in
+                guard let e = err as? JSError else { throw err }
+
+                XCTAssertEqual(e.name, "Error")
+                XCTAssertEqual(e.message, "Unknown error")
+                XCTAssertEqual(e.stack, "<unknown>")
+                XCTAssertEqual(e.line, 0)
+                XCTAssertEqual(e.column, 0)
+                XCTAssertEqual(e.code, nil)
+
+                return Promise.value(())
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }
