@@ -6,6 +6,19 @@ import UIKit
 
 import PromiseKit
 
+fileprivate extension JSError {
+    init(fromDictionary error: Dictionary<String, AnyObject>) {
+        self.init(
+            name: (error["name"] as? String) ?? "Error",
+            message: (error["message"] as? String) ?? "Unknown error",
+            stack: (error["stack"] as? String) ?? "<unknown>",
+            line: (error["line"] as? Int) ?? 0,
+            column: (error["column"] as? Int) ?? 0,
+            code: (error["code"] as? String)
+        )
+    }
+}
+
 fileprivate let defaultOrigin = URL(string: "bridge://localhost/")!
 fileprivate let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
 fileprivate let notFound = "404 Not Found".data(using: .utf8)!
@@ -147,14 +160,7 @@ internal class Context: NSObject, WKScriptMessageHandler {
         if let error = dict["error"] as? Dictionary<String, AnyObject> {
             guard let handler = handlers.removeValue(forKey: id) else { return }
 
-            return handler.reject(JSError(
-                name: (error["name"] as? String) ?? "Error",
-                message: (error["message"] as? String) ?? "Unknown error",
-                stack: (error["stack"] as? String) ?? "<unknown>",
-                line: (error["line"] as? Int) ?? 0,
-                column: (error["column"] as? Int) ?? 0,
-                code: (error["code"] as? String)
-            ))
+            return handler.reject(JSError(fromDictionary: error))
         }
 
         if let method = dict["method"] as? String {
