@@ -139,13 +139,13 @@ internal class Context: NSObject, WKScriptMessageHandler {
         guard let id = dict["id"] as? Int else { return }
 
         if let result = dict["result"] as? String {
-            guard let handler = handlers[id] else { return }
+            guard let handler = handlers.removeValue(forKey: id) else { return }
 
             return handler.fulfill(result)
         }
 
         if let error = dict["error"] as? Dictionary<String, AnyObject> {
-            guard let handler = handlers[id] else { return }
+            guard let handler = handlers.removeValue(forKey: id) else { return }
 
             return handler.reject(JSError(
                 name: (error["name"] as? String) ?? "Error",
