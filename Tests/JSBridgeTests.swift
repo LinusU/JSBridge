@@ -542,4 +542,14 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testReturnBuiltinConstructor() {
+        let bridge = JSBridge(libraryCode: "window.giveEvent = () => Event")
+
+        self.expectation(description: "giveEvent") {
+            bridge.call(function: "giveEvent") as Promise<Void>
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }

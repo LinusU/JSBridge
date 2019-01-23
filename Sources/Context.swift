@@ -57,7 +57,7 @@ fileprivate let internalLibrary = """
         Promise.resolve().then(() => {
             return fnFactory()(...args)
         }).then((result) => {
-            webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) })
+            webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) || 'null' })
         }, (err) => {
             webkit.messageHandlers.scriptHandler.postMessage({ id, error: serializeError(err) })
         })
