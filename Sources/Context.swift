@@ -5,6 +5,7 @@ import UIKit
 #endif
 
 import PromiseKit
+import Signals
 
 fileprivate extension JSError {
     init(fromDictionary error: Dictionary<String, AnyObject>) {
@@ -38,6 +39,12 @@ fileprivate let internalLibrary = """
 
     let nextId = 1
     let callbacks = {}
+
+    console.debug = (...args) => { webkit.messageHandlers.scriptHandler.postMessage({ console: 'debug', text: args.map(String).join(' '), args: args.map(JSON.stringify) }) }
+    console.error = (...args) => { webkit.messageHandlers.scriptHandler.postMessage({ console: 'error', text: args.map(String).join(' '), args: args.map(JSON.stringify) }) }
+    console.info = (...args) => { webkit.messageHandlers.scriptHandler.postMessage({ console: 'info', text: args.map(String).join(' '), args: args.map(JSON.stringify) }) }
+    console.log = (...args) => { webkit.messageHandlers.scriptHandler.postMessage({ console: 'log', text: args.map(String).join(' '), args: args.map(JSON.stringify) }) }
+    console.warn = (...args) => { webkit.messageHandlers.scriptHandler.postMessage({ console: 'warning', text: args.map(String).join(' '), args: args.map(JSON.stringify) }) }
 
     window.addEventListener('pagehide', () => {
         webkit.messageHandlers.scriptHandler.postMessage({ didUnload: true })
@@ -136,6 +143,7 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     private static var errorEncoder = JSONEncoder()
 
+    internal let console = Signal<ConsoleMessage>()
     internal let webView: WKWebView
 
     init(libraryCode: String, customOrigin: URL?, incognito: Bool) {
@@ -162,6 +170,10 @@ internal class Context: NSObject, WKScriptMessageHandler {
             handlers.forEach { $1.reject(AbortedError()) }
             handlers.removeAll()
             (ready, readyResolver) = Promise<Void>.pending()
+        }
+
+        if let type = dict["console"] as? String, let text = dict["text"] as? String, let args = dict["args"] as? [String] {
+            console.fire(ConsoleMessage(type: ConsoleMessageType(rawValue: type)!, text: text, jsonArgs: args))
         }
 
         guard let id = dict["id"] as? Int else { return }

@@ -5,6 +5,7 @@ import UIKit
 #endif
 
 import PromiseKit
+import Signals
 
 public struct AbortedError: Error {}
 
@@ -17,6 +18,20 @@ public struct JSError: Error, Codable {
     public let column: Int
 
     public let code: String?
+}
+
+public enum ConsoleMessageType: String {
+    case debug
+    case error
+    case info
+    case log
+    case warning
+}
+
+public struct ConsoleMessage {
+    public let type: ConsoleMessageType
+    public let text: String
+    public let jsonArgs: [String]
 }
 
 #if os(iOS)
@@ -35,6 +50,7 @@ open class JSBridge {
     public let encoder = JSONEncoder()
     public let decoder = JSONDecoder()
 
+    public let console: Signal<ConsoleMessage>
     public let headless: Bool
     public let webView: WKWebView?
 
@@ -56,6 +72,7 @@ open class JSBridge {
 
     public init(libraryCode: String, customOrigin: URL? = nil, headless: Bool = true, incognito: Bool = false) {
         self.context = Context(libraryCode: libraryCode, customOrigin: customOrigin, incognito: incognito)
+        self.console = context.console
         self.headless = headless
         self.webView = headless ? nil : self.context.webView
 
