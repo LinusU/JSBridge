@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		BF_0FE4154955E9D02D9C8C7D1EA46773E2 /* JSBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_5CF8E2D27602EE12BC89113A180B07F8 /* JSBridge.swift */; };
+		BF_181477FA7624EAF97D88494CB55D1A67 /* Signals.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FR_5F7FB3BF71AE82BBE16B3BE221501906 /* Signals.framework */; };
 		BF_78B234398FF29B520D9D804FC6A52CE9 /* JSBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_5CF8E2D27602EE12BC89113A180B07F8 /* JSBridge.swift */; };
 		BF_83E0B5B53EEEE4D05D2EBA4BE0A2D1FD /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_C2D36ACDCF94D4247D0C257C0AB059AD /* Context.swift */; };
 		BF_9209B285C8A5D846406D523C5A22B65C /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR_C2D36ACDCF94D4247D0C257C0AB059AD /* Context.swift */; };
 		BF_9C93F405BD7A039B1934969BBC790CE5 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FR_309B6BC42CC2A761AE15EFCBC5534AE1 /* PromiseKit.framework */; };
+		BF_B868115730493BE35F492E0F104114C5 /* Signals.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FR_3A718F9EBE7FAECDCBE2AE99DEEBD4FF /* Signals.framework */; };
 		BF_E7860A95D929EC4D4E31D77C56D8D45E /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FR_689D2468B6050B7A77A78748AB69A785 /* PromiseKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -19,7 +21,9 @@
 		FR_1784AAF354A23A2B3D7995DCECE50B8A /* JSBridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JSBridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FR_23EFE65701FCC0FA3E55FDE05DD9FC1F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FR_309B6BC42CC2A761AE15EFCBC5534AE1 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PromiseKit.framework; sourceTree = "<group>"; };
+		FR_3A718F9EBE7FAECDCBE2AE99DEEBD4FF /* Signals.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Signals.framework; sourceTree = "<group>"; };
 		FR_5CF8E2D27602EE12BC89113A180B07F8 /* JSBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSBridge.swift; sourceTree = "<group>"; };
+		FR_5F7FB3BF71AE82BBE16B3BE221501906 /* Signals.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Signals.framework; sourceTree = "<group>"; };
 		FR_6152BDFBDAE3054EFE2B7A4A315C09BF /* JSBridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JSBridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FR_689D2468B6050B7A77A78748AB69A785 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PromiseKit.framework; sourceTree = "<group>"; };
 		FR_C2D36ACDCF94D4247D0C257C0AB059AD /* Context.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
@@ -31,6 +35,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF_E7860A95D929EC4D4E31D77C56D8D45E /* PromiseKit.framework in Frameworks */,
+				BF_B868115730493BE35F492E0F104114C5 /* Signals.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -39,6 +44,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF_9C93F405BD7A039B1934969BBC790CE5 /* PromiseKit.framework in Frameworks */,
+				BF_181477FA7624EAF97D88494CB55D1A67 /* Signals.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +64,7 @@
 			isa = PBXGroup;
 			children = (
 				FR_689D2468B6050B7A77A78748AB69A785 /* PromiseKit.framework */,
+				FR_3A718F9EBE7FAECDCBE2AE99DEEBD4FF /* Signals.framework */,
 			);
 			path = Mac;
 			sourceTree = "<group>";
@@ -75,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				FR_309B6BC42CC2A761AE15EFCBC5534AE1 /* PromiseKit.framework */,
+				FR_5F7FB3BF71AE82BBE16B3BE221501906 /* Signals.framework */,
 			);
 			path = iOS;
 			sourceTree = "<group>";

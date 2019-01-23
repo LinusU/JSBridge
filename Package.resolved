@@ -9,6 +9,15 @@
           "revision": "485131b92d53c0f64898b49b4cb2197d4e6b4c0f",
           "version": "6.7.1"
         }
+      },
+      {
+        "package": "Signals",
+        "repositoryURL": "https://github.com/artman/Signals",
+        "state": {
+          "branch": null,
+          "revision": "e6266a1346c8480914cda001566a69c4d51fa15c",
+          "version": "6.0.0"
+        }
       }
     ]
   },

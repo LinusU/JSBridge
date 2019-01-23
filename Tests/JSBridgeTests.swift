@@ -542,4 +542,26 @@ class BioPassTests: XCTestCase {
 
         self.waitForExpectations(timeout: 2)
     }
+
+    func testConsoleLog() {
+        let bridge = JSBridge(libraryCode: "")
+
+        let waiter = Promise<ConsoleMessage> { seal in
+            bridge.console.subscribeOnce(with: self) { seal.fulfill($0) }
+        }
+
+        self.expectation(description: "console.log") {
+            firstly {
+                bridge.call(function: "console.log", withArgs: (1, "A", ["B", "C"]))
+            }.then { _ in
+                waiter
+            }.done {
+                XCTAssertEqual($0.type, .log)
+                XCTAssertEqual($0.text, "1 A B,C")
+                XCTAssertEqual($0.jsonArgs, ["1", "\"A\"", "[\"B\",\"C\"]"])
+            }
+        }
+
+        self.waitForExpectations(timeout: 2)
+    }
 }
