@@ -18,10 +18,6 @@ dependencies: [
 github "LinusU/JSBridge" ~> 1.0.0
 ```
 
-### Manually
-
-If you have [PromiseKit](https://github.com/mxcl/PromiseKit) installed, you can simply drop the single source file [JSBridge.swift](Sources/JSBridge.swift) into your project.
-
 ## Usage
 
 **foobar.js:**
