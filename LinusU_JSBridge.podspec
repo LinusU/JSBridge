@@ -1,5 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "LinusU_JSBridge"
+  s.module_name  = "JSBridge"
   s.version      = %x(git describe --tags --abbrev=0).chomp
   s.summary      = "Bridge your JavaScript library for usage in Swift"
   s.description  = "Use a hidden WKWebView to bridge your JavaScript library for consumption from Swift"
