@@ -6,6 +6,19 @@ import UIKit
 
 import PromiseKit
 
+public struct AbortedError: Error {}
+
+public struct JSError: Error, Codable {
+    public let name: String
+    public let message: String
+    public let stack: String
+
+    public let line: Int
+    public let column: Int
+
+    public let code: String?
+}
+
 fileprivate extension JSError {
     init(fromDictionary error: Dictionary<String, AnyObject>) {
         self.init(
