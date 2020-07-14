@@ -17,7 +17,7 @@ enum GlobalUIHook {
 internal var globalUIHook: GlobalUIHook = .none
 #endif
 
-@available(iOS 11.0, macOS 10.13, *)
+@available(iOS 9.0, macOS 10.11, *)
 open class JSBridge {
     public let encoder = JSONEncoder()
     public let decoder = JSONDecoder()
