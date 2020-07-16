@@ -32,7 +32,14 @@ fileprivate extension JSError {
     }
 }
 
-fileprivate let defaultOrigin = URL(string: "bridge://localhost/")!
+fileprivate let defaultOrigin: URL = {
+    if #available(iOS 11.0, macOS 10.13, *) {
+        return URL(string: "bridge://localhost/")!
+    } else {
+        return URL(string: "data:")!
+    }
+}()
+
 fileprivate let html = "<!DOCTYPE html>\n<html>\n<head></head>\n<body></body>\n</html>".data(using: .utf8)!
 fileprivate let notFound = "404 Not Found".data(using: .utf8)!
 
@@ -49,10 +56,10 @@ fileprivate let internalLibrary = """
         }
     }
 
-    let nextId = 1
-    let callbacks = {}
+    var nextId = 1
+    var callbacks = {}
 
-    window.addEventListener('pagehide', () => {
+    window.addEventListener('pagehide', function () {
         webkit.messageHandlers.scriptHandler.postMessage({ didUnload: true })
     })
 
@@ -66,21 +73,21 @@ fileprivate let internalLibrary = """
         delete callbacks[id]
     }
 
-    window.__JSBridge__receive__ = function (id, fnFactory, ...args) {
-        Promise.resolve().then(() => {
-            return fnFactory()(...args)
-        }).then((result) => {
+    window.__JSBridge__receive__ = function (id, fnFactory, args) {
+        Promise.resolve().then(function () {
+            return fnFactory().apply(void 0, args)
+        }).then(function (result) {
             webkit.messageHandlers.scriptHandler.postMessage({ id, result: JSON.stringify(result === undefined ? null : result) || 'null' })
-        }, (err) => {
+        }, function (err) {
             webkit.messageHandlers.scriptHandler.postMessage({ id, error: serializeError(err) })
         })
     }
 
-    window.__JSBridge__send__ = function (method, ...args) {
-        return new Promise((resolve, reject) => {
-            const id = nextId++
+    window.__JSBridge__send__ = function (method, args) {
+        return new Promise(function (resolve, reject) {
+            var id = nextId++
             callbacks[id] = { resolve, reject }
-            webkit.messageHandlers.scriptHandler.postMessage({ id, method, params: args.map(x => JSON.stringify(x)) })
+            webkit.messageHandlers.scriptHandler.postMessage({ id, method, params: args.map(function (x) { return JSON.stringify(x) }) })
         })
     }
 
@@ -119,7 +126,7 @@ fileprivate class BridgeSchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
 }
 
-@available(iOS 11.0, macOS 10.13, *)
+@available(iOS 9.0, macOS 10.11, *)
 fileprivate func buildWebViewConfig(libraryCode: String, incognito: Bool) -> WKWebViewConfiguration {
     let source = "\(internalLibrary);try{(function () {\(libraryCode)}());__JSBridge__ready__(true)} catch (err) {__JSBridge__ready__(false, err)}"
     let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
@@ -129,7 +136,9 @@ fileprivate func buildWebViewConfig(libraryCode: String, incognito: Bool) -> WKW
     controller.addUserScript(script)
     configuration.userContentController = controller
 
-    configuration.setURLSchemeHandler(BridgeSchemeHandler(), forURLScheme: "bridge")
+    if #available(iOS 11.0, macOS 10.13, *) {
+        configuration.setURLSchemeHandler(BridgeSchemeHandler(), forURLScheme: "bridge")
+    }
 
     if incognito {
         configuration.websiteDataStore = .nonPersistent()
@@ -138,7 +147,7 @@ fileprivate func buildWebViewConfig(libraryCode: String, incognito: Bool) -> WKW
     return configuration
 }
 
-@available(iOS 11.0, macOS 10.13, *)
+@available(iOS 9.0, macOS 10.11, *)
 internal class Context: NSObject, WKScriptMessageHandler {
     private var (ready, readyResolver) = Promise<Void>.pending()
 
@@ -225,7 +234,7 @@ internal class Context: NSObject, WKScriptMessageHandler {
             self.nextIdentifier += 1
             self.handlers[id] = seal
 
-            self.evaluateJavaScript("__JSBridge__receive__(\(id), () => \(function), ...[\(args)])") {
+            self.evaluateJavaScript("__JSBridge__receive__(\(id), function () { return \(function) }, [\(args)])") {
                 if let error = $1 { seal.reject(error) }
             }
         }
@@ -237,6 +246,6 @@ internal class Context: NSObject, WKScriptMessageHandler {
 
     internal func register(functionNamed name: String, _ fn: @escaping ([String]) throws -> Promise<String>) {
         self.functions[name] = fn
-        self.evaluateJavaScript("window.\(name) = (...args) => __JSBridge__send__('\(name)', ...args)")
+        self.evaluateJavaScript("window.\(name) = function () { return __JSBridge__send__('\(name)', [].slice.call(arguments)) }")
     }
 }
