@@ -219,10 +219,10 @@ class BioPassTests: XCTestCase {
 
         self.expectation(description: "fetch") {
             firstly {
-                // Yes, I know it's bad to call live servers in unit tests, I'll fix this soon™
-                Foobar.fetch(url: URL(string: "https://server.test-cors.org/server?enable=true")!)
+                Foobar.fetch(url: URL(string: "data:text/plain,Hello,%20World!")!)
             }.done { result in
                 XCTAssertEqual(result.status, 200)
+                XCTAssertEqual(result.body, "Hello, World!")
             }
         }
 
