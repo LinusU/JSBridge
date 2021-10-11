@@ -237,7 +237,7 @@ class BioPassTests: XCTestCase {
         bridge.register(functionNamed: "Swift.addOne") { (i: Int) in i + 1 }
         bridge.register(functionNamed: "Swift.addTwo") { (i: Int) in Promise.value(i + 2) }
         bridge.register(functionNamed: "Swift.reject") { return Promise<Void>(error: TestError()) }
-        bridge.register(functionNamed: "Swift.addAllArgs") { (a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int, h: Int) in a + b + c + d + e + f + g + h }
+        bridge.register(functionNamed: "Swift.addAllArgs") { (a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int) in a + b + c + d + e + f + g }
 
         self.expectation(description: "four") {
             firstly {
@@ -280,9 +280,9 @@ class BioPassTests: XCTestCase {
 
         self.expectation(description: "addAllArgs") {
             firstly {
-                bridge.call(function: "Swift.addAllArgs", withArgs: (1, 2, 3, 4, 5, 6, 7, 8)) as Promise<Int>
+                bridge.call(function: "Swift.addAllArgs", withArgs: (1, 2, 3, 4, 5, 6, 7)) as Promise<Int>
             }.done { result in
-                XCTAssertEqual(result, 36)
+                XCTAssertEqual(result, 28)
             }
         }
 
